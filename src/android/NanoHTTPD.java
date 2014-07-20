@@ -398,7 +398,11 @@ public class NanoHTTPD
 
 				// If the method is POST, there may be parameters
 				// in data section, too, read it:
-				if ( method.equalsIgnoreCase( "POST" ))
+				if(method == null) 
+				{
+					sendError( HTTP_BADREQUEST, "BAD REQUEST: method is null : could not decode request" );
+				}
+				else if ( method.equalsIgnoreCase( "POST" ))
 				{
 					String contentType = "";
 					String contentTypeHeader = header.getProperty("content-type");
@@ -1145,4 +1149,5 @@ public class NanoHTTPD
 					"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n"+
 					"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
 }
+
 
