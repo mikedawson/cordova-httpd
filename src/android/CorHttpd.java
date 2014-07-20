@@ -37,6 +37,7 @@ public class CorHttpd extends CordovaPlugin {
     private static final String ACTION_STOP_SERVER = "stopServer";
     private static final String ACTION_GET_URL = "getURL";
     private static final String ACTION_GET_LOCAL_PATH = "getLocalPath";
+    private static final String ACTION_MOUNT_DIR = "mountDir";
     
     private static final int	WWW_ROOT_ARG_INDEX = 0;
     private static final int	PORT_ARG_INDEX = 1;
@@ -62,7 +63,9 @@ public class CorHttpd extends CordovaPlugin {
         } else if (ACTION_GET_LOCAL_PATH.equals(action)) {
             result = getLocalPath(inputs, callbackContext);
             
-        } else {
+        } else if (ACTION_MOUNT_DIR.equals(action)) {
+        	result = mountDir(inputs, callbackContext);
+        }else {
             Log.d(LOGTAG, String.format("Invalid action passed: %s", action));
             result = new PluginResult(Status.INVALID_ACTION);
         }
@@ -94,6 +97,24 @@ public class CorHttpd extends CordovaPlugin {
 		return "127.0.0.1";
     }
 
+    private PluginResult mountDir(JSONArray inputs, CallbackContext callbackContext) {
+    	if(server == null) {
+    		callbackContext.error("Server is not running!");
+    	}else {
+    		try {
+    			String aliasPrefix = inputs.getString(0);
+    			String fileSystemPath = inputs.getString(1);
+    			this.server.mountDir(aliasPrefix, fileSystemPath);
+    			callbackContext.success("Mounted " + aliasPrefix 
+    					+ " to " + fileSystemPath);
+    		}catch(Exception e) {
+    			callbackContext.error(e.toString());
+    		}
+    	}
+    	
+    	return null;
+    }
+    
     private PluginResult startServer(JSONArray inputs, CallbackContext callbackContext) {
 		Log.w(LOGTAG, "startServer");
 
@@ -217,3 +238,4 @@ public class CorHttpd extends CordovaPlugin {
     	__stopServer();
     }
 }
+
