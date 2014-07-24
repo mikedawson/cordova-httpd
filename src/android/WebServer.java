@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.io.IOException;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
@@ -13,6 +14,8 @@ import org.json.JSONException;
 
 import com.rjfun.cordova.httpd.WebServerJavascriptRequest;
 
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.os.Environment;
 
 import com.rjfun.cordova.httpd.NanoHTTPD.Response;
@@ -66,8 +69,15 @@ public class WebServer extends NanoHTTPD
 	 * @param mountDir The path to the directory root of files e.g. 
 	 *  /mnt/sdcard/blah
 	 */
-	public void mountDir(String aliasPrefix, String mountDir) {
+	public void mountDir(String aliasPrefix, String mountDir, CordovaInterface cordova) {
 		AndroidFile dirFile = new AndroidFile(mountDir);
+		
+		if(!mountDir.startsWith("/")) {
+			Context ctx = cordova.getActivity().getApplicationContext();
+			AssetManager am = ctx.getResources().getAssets();
+			dirFile.setAssetManager( am );
+		}
+		
 		WebServerMountedDir webMountedDir = new WebServerMountedDir(
 				aliasPrefix,  dirFile, mountDir);
 		mountedDirs.put(aliasPrefix, webMountedDir);

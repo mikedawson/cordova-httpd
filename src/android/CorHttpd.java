@@ -160,7 +160,8 @@ public class CorHttpd extends CordovaPlugin {
     		try {
     			String aliasPrefix = inputs.getString(0);
     			String fileSystemPath = inputs.getString(1);
-    			this.server.mountDir(aliasPrefix, fileSystemPath);
+    			fileSystemPath = checkAndroidDocRootPath(fileSystemPath);
+    			this.server.mountDir(aliasPrefix, fileSystemPath, cordova);
     			callbackContext.success("Mounted " + aliasPrefix 
     					+ " to " + fileSystemPath);
     		}catch(Exception e) {
@@ -169,6 +170,23 @@ public class CorHttpd extends CordovaPlugin {
     	}
     	
     	return null;
+    }
+    
+    private String checkAndroidDocRootPath(String docRoot) {
+    	String localPath = "";
+    	if(docRoot.startsWith("/")) {
+    		//localPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        	localPath = docRoot;
+        } else {
+        	//localPath = "file:///android_asset/www";
+        	localPath = "www";
+        	if(docRoot.length()>0) {
+        		localPath += "/";
+        		localPath += docRoot;
+        	}
+        }
+    	
+    	return localPath;
     }
     
     private PluginResult startServer(JSONArray inputs, CallbackContext callbackContext) {
@@ -186,6 +204,8 @@ public class CorHttpd extends CordovaPlugin {
             return null;
         }
         
+        
+        //function me
         if(docRoot.startsWith("/")) {
     		//localPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         	localPath = docRoot;
