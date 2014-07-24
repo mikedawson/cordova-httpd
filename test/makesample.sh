@@ -17,7 +17,9 @@ cd $TARGETDIR
 cordova create testhttp com.rjfun.cordova.httpd.tester testhttp
 cd testhttp
 cordova platform add android
-cordova plugin add org.apache.cordova.file
+#cordova plugin add org.apache.cordova.file
+#temporary - to work offline
+cordova plugin add /home/mike/NetBeansProjects/UstadMobileHTML5/plugins/org.apache.cordova.file
 cordova plugin add $PLUGINDIR
 
 echo "Created cordova project in $(pwd)"

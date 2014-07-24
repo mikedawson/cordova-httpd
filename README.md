@@ -37,6 +37,15 @@ stopServer( success_callback, error_callback );
 getURL( success_callback, error_callback );
 
 getLocalPath( success_callback, error_callback );
+
+//Android Only:
+
+mountDir ( urlPrefix, fileDirPath, success_callback, error_callback );
+
+registerHandler ( urlPrefix, success_callback, error_callback );
+
+sendHandlerResponse (responseId, message, success_callback, error_callback);
+
 ```
 
 Example code: (read the comments)
@@ -89,6 +98,26 @@ Example code: (read the comments)
     	    	      // the ip is the active network connection
     	    	      // if no wifi or no cell, "127.0.0.1" will be returned.
         	    		document.getElementById('url').innerHTML = "server is started: <a href='" + url + "' target='_blank'>" + url + "</a>";
+        	    		httpd.mountDir("/files", "/mnt/sdcard/somefolder/files", function() {
+        	    		    //success callback
+        	    		    console.log(url + "/files" + will be served from /mnt/sdcard/somefolder/files");
+    	    		    }, function(err) {
+    	    		        console.log("Error mounting dir " + err);
+	    		        });
+        	    		
+        	    		httpd.registerHandler("/dyncontent", function(resultArr) {
+        	    		    var responseId = resultArr[0];
+                            var uri = resultArr[1];
+                            console.log("Got message for " + responseId + " for uri " + uri);
+                            httpd.sendHandlerResponse(responseId, 
+                                "Thanks for " + uri + " # " + responseId, function() {
+                                    console.log("response sent back OK");
+                                }, function(err) {
+                                    console.log("was an error sending response");
+                                });
+        	    		},function(err) {
+        	    		    console.log('error registering dynamic content handler');
+        	    		});
     	    	    }, function( error ){
     	    	    	document.getElementById('url').innerHTML = 'failed to start server: ' + error;
     	    	    });

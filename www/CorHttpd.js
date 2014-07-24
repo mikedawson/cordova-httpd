@@ -35,6 +35,15 @@ corhttpd_exports.getLocalPath = function(success, error) {
 corhttpd_exports.mountDir = function(aliasPrefix, dirPath, success, error) {
     exec(success, error, "CorHttpd", "mountDir", [aliasPrefix, 
         dirPath]);
+};
+
+corhttpd_exports.registerHandler = function(aliasPrefix, success, error) {
+    exec(success, error, "CorHttpd", "registerHandler", [aliasPrefix]);
+};
+
+corhttpd_exports.sendHandlerResponse = function(responseId, message, success, error) {
+    exec(success, error, "CorHttpd", "sendHandlerResponse", 
+        [responseId, message]);
 }
 
 module.exports = corhttpd_exports;

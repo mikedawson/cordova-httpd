@@ -38,6 +38,8 @@ public class CorHttpd extends CordovaPlugin {
     private static final String ACTION_GET_URL = "getURL";
     private static final String ACTION_GET_LOCAL_PATH = "getLocalPath";
     private static final String ACTION_MOUNT_DIR = "mountDir";
+    private static final String ACTION_REGISTER_HANDLER = "registerHandler";
+    private static final String ACTION_SEND_HANDLER_RESPONSE = "sendHandlerResponse";
     
     private static final int	WWW_ROOT_ARG_INDEX = 0;
     private static final int	PORT_ARG_INDEX = 1;
@@ -56,16 +58,17 @@ public class CorHttpd extends CordovaPlugin {
             
         } else if (ACTION_STOP_SERVER.equals(action)) {
             result = stopServer(inputs, callbackContext);
-            
         } else if (ACTION_GET_URL.equals(action)) {
-            result = getURL(inputs, callbackContext);
-            
+            result = getURL(inputs, callbackContext);            
         } else if (ACTION_GET_LOCAL_PATH.equals(action)) {
             result = getLocalPath(inputs, callbackContext);
-            
         } else if (ACTION_MOUNT_DIR.equals(action)) {
         	result = mountDir(inputs, callbackContext);
-        }else {
+        }else if(ACTION_REGISTER_HANDLER.equals(action)) {
+        	result = registerHandler(inputs, callbackContext);
+    	}else if(ACTION_SEND_HANDLER_RESPONSE.equals(action)) {
+    		result = sendHandlerResponse(inputs, callbackContext);
+    	}else {
             Log.d(LOGTAG, String.format("Invalid action passed: %s", action));
             result = new PluginResult(Status.INVALID_ACTION);
         }
@@ -97,6 +100,59 @@ public class CorHttpd extends CordovaPlugin {
 		return "127.0.0.1";
     }
 
+    private PluginResult sendHandlerResponse(JSONArray inputs, CallbackContext callbackContext) {
+    	int responseId = -1;
+    	String message = "";
+    	try {
+    		responseId = inputs.getInt(0);
+    		message = inputs.getString(1);
+    	}catch(JSONException e) {
+    		e.printStackTrace();
+    		return null;
+    	}
+    	
+    	
+    	server.sendJavascriptReponse(responseId, message);
+    	return null;
+    }
+    
+    /**
+     * Register a javascript handler that will be used to generate 
+     * responses for a certain prefix
+     * 
+     * @param inputs JSONArray where 0 = the URI prefix 
+     * e.g. /some/dir/dynamic
+     * 
+     * @param callbackContext Cordova callback context
+     * @return null - we only fire responses when requests come in
+     */
+    private PluginResult registerHandler(JSONArray inputs, CallbackContext callbackContext) {
+    	if(server == null) {
+    		callbackContext.error("Server not running");
+    	}
+    	
+    	try {
+    		String prefix = inputs.getString(0);
+    		server.registerHandler(prefix, callbackContext);
+    	}catch(JSONException e) {
+    		callbackContext.error(e.toString());
+    	}
+    	
+    	return null;
+    }
+    
+    
+    /**
+     * Mount a specific URI prefix on the server to a specific directory
+     * on the filesystem
+     * 
+     * @param inputs JSONArray where arg 0 = URI Prefix
+     *  arg1 = FileSystem Path (/path/to/dir not file:/// etc)
+     *   
+     * @param callbackContext CordovaCallbackContext
+     * 
+     * @return null as this method directly has a call to callbackContext.success
+     */
     private PluginResult mountDir(JSONArray inputs, CallbackContext callbackContext) {
     	if(server == null) {
     		callbackContext.error("Server is not running!");
@@ -117,6 +173,7 @@ public class CorHttpd extends CordovaPlugin {
     
     private PluginResult startServer(JSONArray inputs, CallbackContext callbackContext) {
 		Log.w(LOGTAG, "startServer");
+		
 
 		final String docRoot; 
         // Get the input data.
