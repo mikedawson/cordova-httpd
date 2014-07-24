@@ -100,7 +100,7 @@ Example code: (read the comments)
         	    		document.getElementById('url').innerHTML = "server is started: <a href='" + url + "' target='_blank'>" + url + "</a>";
         	    		httpd.mountDir("/files", "/mnt/sdcard/somefolder/files", function() {
         	    		    //success callback
-        	    		    console.log(url + "/files" + will be served from /mnt/sdcard/somefolder/files");
+        	    		    console.log(url + "/files will be served from /mnt/sdcard/somefolder/files");
     	    		    }, function(err) {
     	    		        console.log("Error mounting dir " + err);
 	    		        });
