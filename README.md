@@ -108,6 +108,7 @@ Example code: (read the comments)
         	    		httpd.registerHandler("/dyncontent", function(resultArr) {
         	    		    var responseId = resultArr[0];
                             var uri = resultArr[1];
+                            var paramsSent = resultArr[2];//this is JSON with paramName to value
                             console.log("Got message for " + responseId + " for uri " + uri);
                             httpd.sendHandlerResponse(responseId, 
                                 "Thanks for " + uri + " # " + responseId, function() {

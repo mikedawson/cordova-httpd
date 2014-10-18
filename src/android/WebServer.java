@@ -10,6 +10,7 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONException;
 
 import com.rjfun.cordova.httpd.WebServerJavascriptRequest;
@@ -169,6 +170,14 @@ public class WebServer extends NanoHTTPD
 			try {
 				args.put(0, req.id);
 				args.put(1, uri);
+				Enumeration e = parms.propertyNames();
+				JSONObject parmsObj = new JSONObject();
+				
+				while(e.hasMoreElements()) {
+				    String paramName = (String)e.nextElement();
+				    parmsObj.put(paramName, parms.getProperty(paramName));
+				}
+				args.put(2, parmsObj);
 			}catch(JSONException e) {
 				e.printStackTrace();
 			}

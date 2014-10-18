@@ -1102,6 +1102,7 @@ public class NanoHTTPD
 						"ogg		application/x-ogg "+
 						"zip		application/octet-stream "+
 						"exe		application/octet-stream "+
+						"wav		audio/wav "+
 				"class		application/octet-stream " );
 		while ( st.hasMoreTokens())
 			theMimeTypes.put( st.nextToken(), st.nextToken());
