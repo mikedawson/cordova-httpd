@@ -1082,6 +1082,7 @@ public class NanoHTTPD
 				"css		text/css "+
 						"htm		text/html "+
 						"html		text/html "+
+						"xhtml		application/xhtml+xml "+
 						"xml		text/xml "+
 						"txt		text/plain "+
 						"asc		text/plain "+
