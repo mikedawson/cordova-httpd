@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLEncoder;
@@ -893,8 +894,14 @@ public class NanoHTTPD
 				res = new Response( HTTP_FORBIDDEN, MIME_PLAINTEXT,
 						"FORBIDDEN: Won't serve ../ for security reasons." );
 		}
-
-		AndroidFile f = new AndroidFile( homeDir, uri );
+		String uriDecoded = "";
+		try {
+			uriDecoded = java.net.URLDecoder.decode(uri, 
+					"UTF-8");
+		}catch(UnsupportedEncodingException e) {}//not going to happen
+		
+		AndroidFile f = new AndroidFile( homeDir, uriDecoded );
+		
 		if ( res == null && !f.exists())
 			res = new Response( HTTP_NOTFOUND, MIME_PLAINTEXT,
 					"Error 404, file not found." );
