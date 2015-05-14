@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.util.Log;
@@ -244,7 +245,7 @@ public class CorHttpd extends CordovaPlugin {
 			AssetManager am = ctx.getResources().getAssets();
     		f.setAssetManager( am );
     		
-			server = new WebServer(port, f);
+			server = new WebServer(port, f, this);
 		} catch (IOException e) {
 			errmsg = String.format("IO Exception: %s", e.getMessage());
 			Log.w(LOGTAG, errmsg);
@@ -313,6 +314,11 @@ public class CorHttpd extends CordovaPlugin {
      */
     public void onDestroy() {
     	__stopServer();
+    }
+    
+    public void launchBrowser(String url) {
+    	Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    	cordova.getActivity().startActivity(viewIntent);
     }
 }
 

@@ -4,6 +4,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Hashtable;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -47,6 +48,11 @@ public class WebServer extends NanoHTTPD
 	private Hashtable pendingJavascriptRequests;
 	
 	
+	private CorHttpd corHttpd;
+	
+	private int serverPort;
+	
+	
 	/**
 	 * Contructor for web server object
 	 * 
@@ -56,11 +62,13 @@ public class WebServer extends NanoHTTPD
 	 * 
 	 * @throws IOException
 	 */
-	public WebServer(int port, AndroidFile wwwroot ) throws IOException {
+	public WebServer(int port, AndroidFile wwwroot, CorHttpd corHttpd) throws IOException {
 		super(port, wwwroot);
+		this.serverPort = port;
 		mountedDirs = new Hashtable();
 		callbackHandlers = new Hashtable();
 		pendingJavascriptRequests = new Hashtable();
+		this.corHttpd = corHttpd;
 	}
 	
 	/**
@@ -154,7 +162,12 @@ public class WebServer extends NanoHTTPD
 			WebServerMountedDir thisDir = 
 					(WebServerMountedDir)mountedDirObj;
 			uri = uri.substring(thisDir.aliasPrefix.length());
-			return super.serveFile(uri, header, thisDir.homeDir, true);
+			if(parms.containsKey("startdownload")) {
+				String fullURL = "http://127.0.0.1:" + this.serverPort + uri;
+				this.corHttpd.launchBrowser(fullURL);
+			}else {
+				return super.serveFile(uri, header, thisDir.homeDir, true);
+			}
 		}
 		
 		Object callbackHandlerObj = getMatchForURI(uri, callbackHandlers);
