@@ -1118,6 +1118,14 @@ public class NanoHTTPD
 
 	private static int theBufferSize = 16 * 1024;
 	
+	public static getMimeType(String extension) {
+		Object mimeObj = theMimeTypes.get(extension);
+		if(mimeObj != null) {
+			return mimeObj.toString();
+		}else {
+			return null;
+		}
+	}
 	/**
 	 * GMT date formatter
 	 */

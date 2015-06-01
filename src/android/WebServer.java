@@ -164,7 +164,13 @@ public class WebServer extends NanoHTTPD
 			uri = uri.substring(thisDir.aliasPrefix.length());
 			if(parms.containsKey("startdownload")) {
 				String fullURL = "http://127.0.0.1:" + this.serverPort + uri;
-				this.corHttpd.launchBrowser(fullURL);
+				String dotPos = fullURL.lastIndexOf(".");
+				String mimeType = null;
+				if(dotPos != -1 && dotPos < fullURL.length() - 2) {
+					String extension = fullURL.substring(dotPos+1);
+					mimeType = NanoHTTPD.getMimeType(extension);
+				}
+				this.corHttpd.launchBrowser(fullURL, mimeType);
 			}else {
 				return super.serveFile(uri, header, thisDir.homeDir, true);
 			}

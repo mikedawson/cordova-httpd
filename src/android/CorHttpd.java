@@ -316,8 +316,11 @@ public class CorHttpd extends CordovaPlugin {
     	__stopServer();
     }
     
-    public void launchBrowser(String url) {
+    public void launchBrowser(String url, String mimeType) {
     	Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+	if(mimeType != null) {
+		viewIntent.setType(mimeType);
+	}
     	cordova.getActivity().startActivity(viewIntent);
     }
 }
