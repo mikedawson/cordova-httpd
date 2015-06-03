@@ -165,10 +165,14 @@ public class WebServer extends NanoHTTPD
 			if(parms.containsKey("startdownload")) {
 				String fullURL = "http://127.0.0.1:" + this.serverPort + uri;
 				int dotPos = fullURL.lastIndexOf(".");
+				System.out.println("startdownload: looking at " + fullURL);
 				String mimeType = null;
 				if(dotPos != -1 && dotPos < fullURL.length() - 2) {
+					System.out.println("startdownload: finding extension" + fullURL);
 					String extension = fullURL.substring(dotPos+1);
+					System.out.println("startdownload: extension is " + extension);
 					mimeType = NanoHTTPD.getMimeType(extension);
+					System.out.println("startdownload: mime type is " + mimeType);
 				}
 				this.corHttpd.launchBrowser(fullURL, mimeType);
 			}else {

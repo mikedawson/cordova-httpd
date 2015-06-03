@@ -20,10 +20,16 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
+import android.app.Activity;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -51,8 +57,22 @@ public class CorHttpd extends CordovaPlugin {
 	private WebServer server = null;
 	private String	url = "";
 
+	private BroadcastReceiver downloadCompleteReceiver = null;
+	private String downloadCompleteIntentName = null;
+	private IntentFilter downloadCompleteIntentFilter = null;
+	public long downloadAttachmentID = -1;
+	
     @Override
     public boolean execute(String action, JSONArray inputs, CallbackContext callbackContext) throws JSONException {
+    	final Activity cordovaAct = cordova.getActivity();
+    	if(downloadCompleteReceiver == null) {
+    		downloadCompleteReceiver = new DownloadCompleteReceiver(this);
+    		downloadCompleteIntentName = DownloadManager.ACTION_DOWNLOAD_COMPLETE;
+    		downloadCompleteIntentFilter = new IntentFilter(downloadCompleteIntentName);
+    		cordova.getActivity().getApplicationContext().registerReceiver(
+    				downloadCompleteReceiver, downloadCompleteIntentFilter);
+    	}
+    	
         PluginResult result = null;
         if (ACTION_START_SERVER.equals(action)) {
             result = startServer(inputs, callbackContext);
@@ -76,6 +96,9 @@ public class CorHttpd extends CordovaPlugin {
         
         if(result != null) callbackContext.sendPluginResult( result );
         
+        
+                
+
         return true;
     }
     
@@ -316,12 +339,90 @@ public class CorHttpd extends CordovaPlugin {
     	__stopServer();
     }
     
-    public void launchBrowser(String url, String mimeType) {
-    	Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-	if(mimeType != null) {
-		viewIntent.setType(mimeType);
-	}
-    	cordova.getActivity().startActivity(viewIntent);
+    public void launchBrowser(String url, final String mimeType) {
+    	System.out.println("launch browser for " + url);
+    	final Activity cordovaActivity = cordova.getActivity();
+    	final Context context = cordovaActivity.getApplicationContext();
+    	
+    	String filename = url.substring(url.lastIndexOf('/')+1);
+    	
+    	
+    	if(mimeType != null) {
+	    	DownloadManager.Request request = 
+				new DownloadManager.Request(Uri.parse(url));
+	    	request.setTitle(filename);
+	    	request.setDescription("Course file attachment");
+	    	request.setDestinationInExternalPublicDir( 
+    			Environment.DIRECTORY_DOWNLOADS, filename);
+	    	request.setVisibleInDownloadsUi(true);
+	    	DownloadManager manager = 
+				(DownloadManager)context.getSystemService(Context.DOWNLOAD_SERVICE);
+    		this.downloadAttachmentID = manager.enqueue(request);
+    	}else {
+    		System.out.println("Starting browser for: " + url);
+    		Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    		cordovaActivity.startActivity(viewIntent);
+    	}
+    	
+    	/*
+    	try {
+    		System.out.println("Attempting to start activity for " + url);
+    		//cordovaActivity.startActivity(viewIntent);
+    	}catch(android.content.ActivityNotFoundException e) {
+    		cordovaActivity.runOnUiThread(new Runnable() {
+    			public void run() {
+    				Toast toast = Toast.makeText(
+						cordovaActivity.getApplicationContext(), 
+						"Sorry: you don't have an app to view " + mimeType, 
+						Toast.LENGTH_LONG);
+		    		toast.show();
+    			}
+    		});
+    	}
+    	*/
     }
 }
 
+class DownloadCompleteReceiver extends BroadcastReceiver {
+
+	private CorHttpd parent;
+	
+	public DownloadCompleteReceiver(CorHttpd parent) {
+		this.parent = parent;
+	}
+	
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		long downloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0L);
+		if(downloadID != parent.downloadAttachmentID) {
+			System.out.println("ignore unrelated download");
+			return;
+		}
+		
+		DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+		DownloadManager.Query query = new DownloadManager.Query();
+		query.setFilterById(downloadID);
+		Cursor cursor = downloadManager.query(query);
+		if(!cursor.moveToFirst()) {
+			System.out.println("empty row");
+			return;
+		}
+		
+		try {
+			int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
+			String downloadedPackageUriString = cursor.getString(uriIndex);
+			File mFile = new File(Uri.parse(downloadedPackageUriString).getPath());
+			System.out.println("view file exists: " + mFile.exists());
+			Intent viewIntent = new Intent(Intent.ACTION_VIEW, 
+					Uri.fromFile(mFile));
+			System.out.println("Requesting viewer for : " + downloadedPackageUriString);
+    		parent.cordova.getActivity().startActivity(viewIntent);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+
+	}
+	
+}
