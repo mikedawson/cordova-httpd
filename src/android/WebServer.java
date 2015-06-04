@@ -3,7 +3,11 @@ package com.rjfun.cordova.httpd;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Hashtable;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.cordova.CallbackContext;
@@ -157,6 +161,7 @@ public class WebServer extends NanoHTTPD
 	@Override
 	public Response serve( String uri, String method, Properties header, Properties parms, Properties files ){
 		//see if this is a mounted directory
+		System.out.println("Serve uri: " + uri);
 		Object mountedDirObj = getMatchForURI(uri, mountedDirs);
 		if(mountedDirObj != null) {
 			WebServerMountedDir thisDir = 
@@ -175,6 +180,27 @@ public class WebServer extends NanoHTTPD
 					System.out.println("startdownload: mime type is " + mimeType);
 				}
 				this.corHttpd.launchBrowser(fullURL, mimeType);
+			}else if(uri.endsWith(".xhtml")){
+				Response resp = null;
+				try {
+					String fileContents = null;
+					File f = new File(thisDir.homeDir, uri);
+					InputStream fin = new FileInputStream(f);
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					byte[] buf = new byte[1024];
+					int bytesRead;
+					while((bytesRead = fin.read(buf))!= -1) {
+						bout.write(buf, 0, bytesRead);
+					}
+					fin.close();
+					String contentStr = new String(bout.toByteArray(), "UTF-8");
+					contentStr = contentStr.replaceAll("&\\s", "&amp;");
+					resp = new Response(NanoHTTPD.HTTP_OK, 
+							NanoHTTPD.MIME_HTML, contentStr);					
+				}catch(IOException e) {
+					resp = new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, "Error: " + e.toString());
+				}
+				return resp;
 			}else {
 				return super.serveFile(uri, header, thisDir.homeDir, true);
 			}
